@@ -2,6 +2,8 @@ package com.profiler.cpu.service;
 
 import com.profiler.cpu.model.*;
 import com.profiler.cpu.util.MathUtils;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +40,7 @@ public class RecommendationCalculatorService {
         this.mathUtils = mathUtils;
     }
     
+    @WithSpan("RecommendationCalculatorService.calculate")
     public RecommendationResponse calculate(RecommendationRequest request) {
         logger.info("Starting calculation for customer {} with {} devices",
                    request.getCustomerId(),
@@ -80,6 +83,7 @@ public class RecommendationCalculatorService {
                 .build();
     }
     
+    @WithSpan("RecommendationCalculatorService.performCpuIntensiveWork")
     private void performCpuIntensiveWork(RecommendationRequest request) {
         int deviceCount = request.getDevices() != null ? request.getDevices().size() : 1;
         
@@ -100,7 +104,8 @@ public class RecommendationCalculatorService {
         }
     }
     
-    private void performAdditionalCpuWork(long additionalMs) {
+    @WithSpan("RecommendationCalculatorService.performAdditionalCpuWork")
+    private void performAdditionalCpuWork(@SpanAttribute("additionalMs") long additionalMs) {
         long targetTime = System.currentTimeMillis() + additionalMs;
         int iterations = 0;
         

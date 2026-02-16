@@ -4,6 +4,8 @@ import com.profiler.io.model.Device;
 import com.profiler.io.model.DeviceContext;
 import com.profiler.io.util.DataMapper;
 import com.profiler.io.util.StatisticsCalculator;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -33,7 +35,8 @@ public class DeviceAggregationService {
         this.statisticsCalculator = statisticsCalculator;
     }
     
-    public List<DeviceContext> aggregateDevices(Long customerId) {
+    @WithSpan("aggregateDevices")
+    public List<DeviceContext> aggregateDevices(@SpanAttribute("customerId") Long customerId) {
         logger.debug("Aggregating devices for customer {}", customerId);
         
         List<Device> devices = buildingAnalysisService.getAllDevicesForCustomer(customerId);

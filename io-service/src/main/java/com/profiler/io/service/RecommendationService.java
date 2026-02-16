@@ -3,6 +3,8 @@ package com.profiler.io.service;
 import com.profiler.io.client.CpuServiceClient;
 import com.profiler.io.model.RecommendationRequest;
 import com.profiler.io.model.RecommendationResponse;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -26,8 +28,9 @@ public class RecommendationService {
         this.cpuServiceClient = cpuServiceClient;
     }
     
+    @WithSpan("getRecommendations")
     @Transactional(readOnly = true)
-    public RecommendationResponse getRecommendations(Long customerId) {
+    public RecommendationResponse getRecommendations(@SpanAttribute("customerId") Long customerId) {
         logger.info("Processing recommendation request for customer {}", customerId);
         
         long startTime = System.currentTimeMillis();

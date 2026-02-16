@@ -2,6 +2,8 @@ package com.profiler.cpu.service;
 
 import com.profiler.cpu.util.MathUtils;
 import com.profiler.cpu.util.ScoreCalculator;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -26,7 +28,10 @@ public class ScoreAggregatorService {
         this.scoreCalculator = scoreCalculator;
     }
     
-    public double aggregateScores(List<Double> scores, String deviceType, int deviceCount) {
+    @WithSpan("ScoreAggregatorService.aggregateScores")
+    public double aggregateScores(List<Double> scores, 
+                                 @SpanAttribute("deviceType") String deviceType, 
+                                 @SpanAttribute("deviceCount") int deviceCount) {
         logger.debug("Aggregating {} scores for device type {}", scores.size(), deviceType);
         
         // CPU work: Calculate hash for device type

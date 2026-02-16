@@ -4,6 +4,8 @@ import com.profiler.loadgen.model.LoadTestRequest;
 import com.profiler.loadgen.model.LoadTestResponse;
 import com.profiler.loadgen.model.LoadTestStats;
 import com.profiler.loadgen.util.MetricsCollector;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ public class LoadGeneratorService {
         this.ioServiceClient = ioServiceClient;
     }
     
+    @WithSpan("LoadGeneratorService.runLoadTest")
     public LoadTestResponse runLoadTest(LoadTestRequest request) {
         logger.info("Starting load test: {} parallel requests, warmup: {}s, pause: {}s, measurement: {}s",
                    request.getParallelRequests(),
@@ -104,8 +107,11 @@ public class LoadGeneratorService {
         }
     }
     
-    private void runLoadPhase(ExecutorService executor, List<Long> customerIds, 
-                             int parallelRequests, int durationSeconds,
+    @WithSpan("LoadGeneratorService.runLoadPhase")
+    private void runLoadPhase(ExecutorService executor, 
+                             List<Long> customerIds, 
+                             @SpanAttribute("parallelRequests") int parallelRequests, 
+                             @SpanAttribute("durationSeconds") int durationSeconds,
                              MetricsCollector metrics) throws InterruptedException {
         metrics.reset();
         

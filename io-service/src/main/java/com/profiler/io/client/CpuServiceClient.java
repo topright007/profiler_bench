@@ -2,6 +2,8 @@ package com.profiler.io.client;
 
 import com.profiler.io.model.RecommendationRequest;
 import com.profiler.io.model.RecommendationResponse;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +28,7 @@ public class CpuServiceClient {
         this.cpuServiceUrl = cpuServiceUrl;
     }
     
+    @WithSpan("CpuServiceClient.calculateRecommendations")
     public RecommendationResponse calculateRecommendations(RecommendationRequest request) {
         logger.info("Calling CPU service for customer {} with {} devices", 
                     request.getCustomerId(), 

@@ -1,6 +1,8 @@
 package com.profiler.loadgen.service;
 
 import com.profiler.loadgen.model.RecommendationResponse;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +27,8 @@ public class IoServiceClient {
         this.ioServiceUrl = ioServiceUrl;
     }
     
-    public RecommendationResponse getRecommendations(Long customerId) {
+    @WithSpan("IoServiceClient.getRecommendations")
+    public RecommendationResponse getRecommendations(@SpanAttribute("customerId") Long customerId) {
         String url = ioServiceUrl + "/api/recommendations/" + customerId;
         
         HttpHeaders headers = new HttpHeaders();

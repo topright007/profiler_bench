@@ -4,6 +4,8 @@ import com.profiler.cpu.model.BuildingContext;
 import com.profiler.cpu.model.DeviceContext;
 import com.profiler.cpu.model.DeviceRecommendation;
 import com.profiler.cpu.util.MathUtils;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -33,9 +35,10 @@ public class DeviceScorerService {
         this.mathUtils = mathUtils;
     }
     
+    @WithSpan("DeviceScorerService.scoreDevices")
     public List<DeviceRecommendation> scoreDevices(List<DeviceContext> existingDevices,
                                                     List<BuildingContext> buildings,
-                                                    String customerType) {
+                                                    @SpanAttribute("customerType") String customerType) {
         logger.debug("Scoring devices for {} existing devices", existingDevices.size());
         
         // Get compatibility scores (calls level 4)

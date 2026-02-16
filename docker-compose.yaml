@@ -32,6 +32,15 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8081:8081"
+    environment:
+      OTEL_SERVICE_NAME: cpu-service
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+    depends_on:
+      - jaeger
     networks:
       - vm_net
     deploy:
@@ -62,11 +71,19 @@ services:
       DB_USER: postgres
       DB_PASSWORD: password
       CPU_SERVICE_URL: http://cpu-service:8081
+      OTEL_SERVICE_NAME: io-service
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
     depends_on:
       postgres:
         condition: service_healthy
       cpu-service:
         condition: service_healthy
+      jaeger:
+        condition: service_started
     networks:
       - vm_net
     deploy:
@@ -92,9 +109,17 @@ services:
       - "8082:8082"
     environment:
       IO_SERVICE_URL: http://io-service:8080
+      OTEL_SERVICE_NAME: load-generator
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
     depends_on:
       io-service:
         condition: service_healthy
+      jaeger:
+        condition: service_started
     networks:
       - vm_net
     deploy:
@@ -188,6 +213,18 @@ services:
       - /usr/share/fonts/truetype:/usr/share/fonts/truetype
     ports:
       - 8888:8888
+  jaeger:
+    container_name: jaeger
+    image: jaegertracing/all-in-one:1.53
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4317:4317"    # OTLP gRPC receiver
+      - "4318:4318"    # OTLP HTTP receiver
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - vm_net
+    restart: unless-stopped
 volumes:
   promdata: { }
   vmdata: { }

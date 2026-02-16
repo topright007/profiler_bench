@@ -3,6 +3,8 @@ package com.profiler.cpu.service;
 import com.profiler.cpu.model.BuildingContext;
 import com.profiler.cpu.model.DeviceContext;
 import com.profiler.cpu.util.MathUtils;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -30,9 +32,10 @@ public class CompatibilityAnalyzerService {
         this.mathUtils = mathUtils;
     }
     
+    @WithSpan("CompatibilityAnalyzerService.analyzeCompatibility")
     public Map<String, Double> analyzeCompatibility(List<DeviceContext> devices,
                                                     List<BuildingContext> buildings,
-                                                    String customerType) {
+                                                    @SpanAttribute("customerType") String customerType) {
         logger.debug("Analyzing compatibility for {} devices across {} buildings",
                     devices.size(), buildings.size());
         

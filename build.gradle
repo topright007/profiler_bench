@@ -28,6 +28,11 @@ subprojects {
         implementation 'org.slf4j:slf4j-api'
         implementation 'ch.qos.logback:logback-classic'
         
+        // OpenTelemetry API (for @WithSpan annotations)
+        implementation platform('io.opentelemetry:opentelemetry-bom:1.34.1')
+        implementation 'io.opentelemetry:opentelemetry-api'
+        implementation 'io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.1.0'
+        
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
         

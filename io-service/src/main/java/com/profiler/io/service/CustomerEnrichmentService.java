@@ -3,6 +3,8 @@ package com.profiler.io.service;
 import com.profiler.io.model.*;
 import com.profiler.io.repository.CustomerRepository;
 import com.profiler.io.util.DataMapper;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -33,7 +35,8 @@ public class CustomerEnrichmentService {
         this.dataMapper = dataMapper;
     }
     
-    public RecommendationRequest enrichCustomerData(Long customerId) {
+    @WithSpan("enrichCustomerData")
+    public RecommendationRequest enrichCustomerData(@SpanAttribute("customerId") Long customerId) {
         logger.debug("Enriching data for customer {}", customerId);
         
         Customer customer = customerRepository.findById(customerId)
