@@ -1,0 +1,196 @@
+services:
+  postgres:
+    container_name: postgres
+    cap_add:
+      - NET_ADMIN
+    image: postgres:17.8
+    ports:
+      - "15432:5432"
+    environment:
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+    networks:
+      - vm_net
+    deploy:
+      resources:
+        limits:
+          cpus: 1
+#          memory: 2G
+        reservations:
+          cpus: 1
+#          memory: 2G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  cpu-service:
+    container_name: cpu-service
+    build:
+      context: ./cpu-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    networks:
+      - vm_net
+    deploy:
+      resources:
+        limits:
+          cpus: 2
+        reservations:
+          cpus: 1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  io-service:
+    container_name: io-service
+    build:
+      context: ./io-service
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: postgres
+      DB_USER: postgres
+      DB_PASSWORD: password
+      CPU_SERVICE_URL: http://cpu-service:8081
+    depends_on:
+      postgres:
+        condition: service_healthy
+      cpu-service:
+        condition: service_healthy
+    networks:
+      - vm_net
+    deploy:
+      resources:
+        limits:
+          cpus: 2
+        reservations:
+          cpus: 1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  load-generator:
+    container_name: load-generator
+    build:
+      context: ./load-generator
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      IO_SERVICE_URL: http://io-service:8080
+    depends_on:
+      io-service:
+        condition: service_healthy
+    networks:
+      - vm_net
+    deploy:
+      resources:
+        limits:
+          cpus: 2
+        reservations:
+          cpus: 1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+  docker-exporter:
+    container_name: docker-exporter
+    image: wywywywy/docker_stats_exporter:latest
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - vm_net
+    ports:
+      - "9487:9487"
+    restart: always
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:v2.14.0
+    depends_on:
+      - "victoriametrics"
+      - "docker-exporter"
+    ports:
+      - 9090:9090
+    volumes:
+      - promdata:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - vm_net
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  victoriametrics:
+    container_name: victoriametrics
+    image: victoriametrics/victoria-metrics
+    ports:
+      - 8428:8428
+      - 2003:2003
+      - 4242:4242
+    volumes:
+      - vmdata:/storage
+    command:
+      - '--storageDataPath=/storage'
+      - '--graphiteListenAddr=:2003'
+      - '--opentsdbListenAddr=:4242'
+      - '--httpListenAddr=:8428'
+    networks:
+      - vm_net
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:6.5.0
+#    entrypoint: >
+#      /bin/sh -c "
+#      cd /var/lib/grafana &&
+#      mkdir -p dashboards &&
+#      && run.sh"
+#      sed 's/$${DS_PROMETHEUS}/Prometheus/g' vm.json > dashboards/vm.json &&
+#      /run.sh"
+    depends_on:
+      - "victoriametrics"
+    ports:
+      - 3000:3000
+    volumes:
+      - grafanadata:/var/lib/grafana
+#      - ./provisioning/:/etc/grafana/provisioning/
+#      - ./../../dashboards/victoriametrics.json:/var/lib/grafana/vm.json
+    networks:
+      - vm_net
+    restart: always
+  jupyter:
+    container_name: jupyter
+    image: jupyter/datascience-notebook
+    volumes:
+      - ./ipnb:/home/jovyan/ipnb
+      - ./jupyter_notebook_config.py:/home/jovyan/.jupyter/jupyter_notebook_config.py
+      - /usr/share/fonts/truetype:/usr/share/fonts/truetype
+    ports:
+      - 8888:8888
+volumes:
+  promdata: { }
+  vmdata: { }
+  grafanadata: { }
+networks:
+  vm_net:

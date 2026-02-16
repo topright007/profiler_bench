@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="01-create-customers-table" author="profiler">
+        <createTable tableName="customers">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="phone" type="VARCHAR(20)"/>
+            <column name="customer_type" type="VARCHAR(20)"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <createIndex tableName="customers" indexName="idx_customer_email">
+            <column name="email"/>
+        </createIndex>
+        <createIndex tableName="customers" indexName="idx_customer_type">
+            <column name="customer_type"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="02-create-buildings-table" author="profiler">
+        <createTable tableName="buildings">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="address" type="VARCHAR(200)"/>
+            <column name="building_type" type="VARCHAR(50)"/>
+            <column name="square_meters" type="INTEGER"/>
+            <column name="customer_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint
+                baseTableName="buildings"
+                baseColumnNames="customer_id"
+                constraintName="fk_buildings_customer"
+                referencedTableName="customers"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+        
+        <createIndex tableName="buildings" indexName="idx_buildings_customer_id">
+            <column name="customer_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="03-create-devices-table" author="profiler">
+        <createTable tableName="devices">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="device_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="manufacturer" type="VARCHAR(50)"/>
+            <column name="model_number" type="VARCHAR(50)"/>
+            <column name="power_consumption" type="INTEGER"/>
+            <column name="installation_date" type="TIMESTAMP"/>
+            <column name="status" type="VARCHAR(20)"/>
+            <column name="building_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint
+                baseTableName="devices"
+                baseColumnNames="building_id"
+                constraintName="fk_devices_building"
+                referencedTableName="buildings"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+        
+        <createIndex tableName="devices" indexName="idx_devices_building_id">
+            <column name="building_id"/>
+        </createIndex>
+        <createIndex tableName="devices" indexName="idx_devices_type">
+            <column name="device_type"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,25 @@
+# Ignore build artifacts
+**/build/
+**/target/
+**/.gradle/
+
+# Ignore IDE files
+**/.idea/
+**/.vscode/
+**/*.iml
+**/*.iws
+**/*.ipr
+**/.settings/
+**/.classpath
+**/.project
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore log files
+**/*.log
+
+# Ignore git
+.git/
+.gitignore

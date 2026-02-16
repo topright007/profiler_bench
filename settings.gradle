@@ -1,0 +1,5 @@
+rootProject.name = 'profiler-bench'
+
+include 'io-service'
+include 'cpu-service'
+include 'load-generator'

@@ -1,0 +1,26 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: cpu-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.profiler.cpu: INFO
+    org.springframework.web: INFO
+
+calculation:
+  min-duration-ms: 50
+  max-duration-ms: 500
+  iterations-per-device: 1000
