@@ -14,7 +14,7 @@ COPY build/libs/*.jar app.jar
 EXPOSE 8082
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=1s --timeout=3s --start-period=120s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:8082/actuator/health || exit 1
 
 # Run the application with OpenTelemetry Java agent

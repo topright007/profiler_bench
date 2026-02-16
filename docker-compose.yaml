@@ -52,10 +52,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/actuator/health"]
-      interval: 30s
+      interval: 1s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 120s
 
   io-service:
     container_name: io-service
@@ -95,10 +95,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
-      interval: 30s
+      interval: 1s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 120s
 
   load-generator:
     container_name: load-generator
@@ -131,10 +131,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/actuator/health"]
-      interval: 30s
+      interval: 1s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 120s
   docker-exporter:
     container_name: docker-exporter
     image: wywywywy/docker_stats_exporter:latest
@@ -225,9 +225,23 @@ services:
     networks:
       - vm_net
     restart: unless-stopped
+  profiler-ui:
+    container_name: profiler-ui
+    build:
+      context: profiler_build/profiler_agent/profiler/build/libs
+      dockerfile: ../../../../Dockerfile.ui
+    ports:
+      - 8180:8180
+      - 7779:7779
+    volumes:
+      - dump:/var/log/dump
+    networks:
+      - vm_net
+    restart: unless-stopped
 volumes:
   promdata: { }
   vmdata: { }
   grafanadata: { }
+  dump: {}
 networks:
   vm_net:

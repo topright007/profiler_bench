@@ -1,14 +1,11 @@
 #!/bin/bash
+set -e
 
 echo "Building all services..."
 
 # Clean and build all services
 ./gradlew clean build -x test
-
-if [ $? -ne 0 ]; then
-    echo "Build failed!"
-    exit 1
-fi
+profiler_build/build.sh
 
 echo "Build successful!"
 echo "Starting Docker Compose..."
