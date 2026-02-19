@@ -12,5 +12,5 @@ ENV SERVER_TOMCAT_SO_LINGER=0
 EXPOSE 8180
 
 # Entrypoint для запуска WAR файла
-ENTRYPOINT ["java", "-jar", "profiler.war"]
+ENTRYPOINT ["java", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:7779" , "-jar", "profiler.war"]
 

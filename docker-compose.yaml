@@ -1,4 +1,13 @@
 services:
+  init-dump:
+    container_name: init-dump
+    image: alpine:latest
+    command: sh -c "mkdir -p /var/log/dump/default/ && echo 'Dump directory initialized'"
+    volumes:
+      - dump:/var/log/dump
+    networks:
+      - vm_net
+
   postgres:
     container_name: postgres
     cap_add:
@@ -39,8 +48,12 @@ services:
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
       OTEL_METRICS_EXPORTER: none
       OTEL_LOGS_EXPORTER: none
+      JAVA_TOOL_OPTIONS: -javaagent:/app/profiler/lib/qubership-profiler-agent.jar -Dprofiler.dump=/var/log/dump/default/cpu-service
     depends_on:
-      - jaeger
+      init-dump:
+        condition: service_completed_successfully
+      jaeger:
+        condition: service_started
     networks:
       - vm_net
     deploy:
@@ -56,6 +69,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 120s
+    volumes:
+      - dump:/var/log/dump
+      - ./profiler_build/installer:/app/profiler
 
   io-service:
     container_name: io-service
@@ -77,10 +93,11 @@ services:
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
       OTEL_METRICS_EXPORTER: none
       OTEL_LOGS_EXPORTER: none
+      JAVA_TOOL_OPTIONS: -javaagent:/app/profiler/lib/qubership-profiler-agent.jar -Dprofiler.dump=/var/log/dump/default/io-service
     depends_on:
+      init-dump:
+        condition: service_completed_successfully
       postgres:
-        condition: service_healthy
-      cpu-service:
         condition: service_healthy
       jaeger:
         condition: service_started
@@ -99,6 +116,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 120s
+    volumes:
+      - dump:/var/log/dump
+      - ./profiler_build/installer:/app/profiler
 
   load-generator:
     container_name: load-generator
@@ -116,10 +136,8 @@ services:
       OTEL_METRICS_EXPORTER: none
       OTEL_LOGS_EXPORTER: none
     depends_on:
-      io-service:
-        condition: service_healthy
-      jaeger:
-        condition: service_started
+      init-dump:
+        condition: service_completed_successfully
     networks:
       - vm_net
     deploy:
@@ -227,9 +245,10 @@ services:
     restart: unless-stopped
   profiler-ui:
     container_name: profiler-ui
-    build:
-      context: profiler_build/profiler_agent/profiler/build/libs
-      dockerfile: ../../../../Dockerfile.ui
+    # build:
+    #   context: profiler_build/profiler_agent/profiler/build/libs
+    #   dockerfile: ../../../../Dockerfile.ui
+    image: profiler-ui:topright
     ports:
       - 8180:8180
       - 7779:7779
@@ -238,6 +257,9 @@ services:
     networks:
       - vm_net
     restart: unless-stopped
+    depends_on:
+      init-dump:
+        condition: service_completed_successfully
 volumes:
   promdata: { }
   vmdata: { }

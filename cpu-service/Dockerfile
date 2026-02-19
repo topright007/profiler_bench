@@ -18,4 +18,7 @@ HEALTHCHECK --interval=1s --timeout=3s --start-period=120s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:8081/actuator/health || exit 1
 
 # Run the application with OpenTelemetry Java agent
-ENTRYPOINT ["java", "-javaagent:/app/opentelemetry-javaagent.jar", "-jar", "app.jar"]
+ENTRYPOINT ["java", \
+#     "-javaagent:/app/opentelemetry-javaagent.jar",\
+    "-jar", \
+    "app.jar"]

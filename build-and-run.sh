@@ -11,7 +11,8 @@ echo "Build successful!"
 echo "Starting Docker Compose..."
 
 # Build and start all services
-docker-compose up --build -d
+docker compose build --no-cache
+docker-compose up -d
 
 echo "Waiting for services to be healthy..."
 sleep 30

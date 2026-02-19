@@ -27,3 +27,35 @@ calculation:
   min-duration-ms: 50
   max-duration-ms: 500
   iterations-per-device: 1000
+
+otel:
+  service:
+    name: cpu-service
+  sdk:
+    disabled: ${OTEL_SDK_DISABLED:false}
+  resource:
+    attributes:
+      deployment.environment: ${DEPLOYMENT_ENV:dev}
+      service.namespace: profiler-bench
+      host.name: ${HOSTNAME:unknown}
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://jaeger:4317}
+      protocol: grpc/protobuf
+      compression: gzip
+      timeout: 30s
+  traces:
+    exporter: otlp
+    sampler:
+      probability: 1.0
+  metrics:
+    exporter: none
+  logs:
+    exporter: none
+  instrumentation:
+    annotations:
+      enabled: true
+    kafka:
+      enabled: true
+    grpc:
+      enabled: true
