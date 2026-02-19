@@ -3,6 +3,7 @@ package com.profiler.cpu.service;
 import com.profiler.cpu.model.BuildingContext;
 import com.profiler.cpu.model.DeviceContext;
 import com.profiler.cpu.util.MathUtils;
+import io.micrometer.core.annotation.Timed;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import org.slf4j.Logger;
@@ -33,6 +34,7 @@ public class CompatibilityAnalyzerService {
     }
     
     @WithSpan("CompatibilityAnalyzerService.analyzeCompatibility")
+    @io.micrometer.core.annotation.Timed("CompatibilityAnalyzerService.analyzeCompatibility")
     public Map<String, Double> analyzeCompatibility(List<DeviceContext> devices,
                                                     List<BuildingContext> buildings,
                                                     @SpanAttribute("customerType") String customerType) {
@@ -42,9 +44,11 @@ public class CompatibilityAnalyzerService {
         // Group devices by type
         Map<String, List<DeviceContext>> devicesByType = devices.stream()
                 .collect(Collectors.groupingBy(DeviceContext::getDeviceType));
-        
+
+        logger.info("Stacktrace here", new Exception());
+
         Map<String, Double> compatibilityScores = new java.util.HashMap<>();
-        
+        long totalCalcTime = System.nanoTime();
         for (Map.Entry<String, List<DeviceContext>> entry : devicesByType.entrySet()) {
             String deviceType = entry.getKey();
             List<DeviceContext> typeDevices = entry.getValue();
@@ -55,7 +59,9 @@ public class CompatibilityAnalyzerService {
             // Calculate individual scores
             List<Double> scores = new ArrayList<>();
             for (DeviceContext device : typeDevices) {
+                long calcStart = System.nanoTime();
                 double score = calculateDeviceScore(device, buildings, customerType);
+                totalCalcTime += System.nanoTime() - calcStart;
                 scores.add(score);
             }
             
@@ -72,11 +78,13 @@ public class CompatibilityAnalyzerService {
             
             compatibilityScores.put(deviceType, aggregatedScore * primeBonus);
         }
+
+        logger.debug("Compatibility analysis took {} ms", totalCalcTime / 1000000.0);
         
         logger.debug("Calculated compatibility scores for {} device types", compatibilityScores.size());
         return compatibilityScores;
     }
-    
+
     private double calculateDeviceScore(DeviceContext device, List<BuildingContext> buildings, String customerType) {
         double score = 50.0; // Base score
         

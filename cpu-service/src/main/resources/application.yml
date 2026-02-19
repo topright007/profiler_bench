@@ -28,6 +28,11 @@ calculation:
   max-duration-ms: 500
   iterations-per-device: 1000
 
+micrometer:
+  observations:
+    annotations:
+      enabled: true
+
 otel:
   service:
     name: cpu-service
