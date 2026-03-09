@@ -29,9 +29,18 @@ chmod +x build.sh && ./build.sh
 cp netcracker-cloud-profiler-ui-*.tgz ../collector/cloud-profiler-ui.tgz
 
 cd ../collector
-rm -rf target/cloud-profiler-ui || mkdir -p target/cloud-profiler-ui
-tar -xvzf cloud-profiler-ui.tgz -C target/cloud-profiler-ui \
-    && cp -fR target/cloud-profiler-ui/package/build/* src/main/resources/META-INF/resources/
+rm -rf target/cloud-profiler-ui
+mkdir -p target/cloud-profiler-ui
+tar -xvzf cloud-profiler-ui.tgz -C target/cloud-profiler-ui
+
+UI_RESOURCES_DIR=src/main/resources/META-INF/resources
+rm -rf "$UI_RESOURCES_DIR/static"
+cp -fR target/cloud-profiler-ui/package/build/* "$UI_RESOURCES_DIR/"
+
+if [[ ! -d "$UI_RESOURCES_DIR/static/css" || ! -d "$UI_RESOURCES_DIR/static/js" ]]; then
+  echo "ERROR: UI static directories are missing after sync: expected static/css and static/js"
+  exit 1
+fi
 
 ./mvnw --batch-mode clean package -Dmaven.test.skip=true -Dmaven.javadoc.skip=true -V -B
 docker build . -t "profiler-collector:latest" 
