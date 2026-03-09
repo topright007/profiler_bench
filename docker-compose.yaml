@@ -69,6 +69,50 @@ services:
       - vm_net
     restart: "no"
 
+  maintenance-init:
+    container_name: maintenance-init
+    image: profiler-maintenance:latest
+    entrypoint: ["sh", "-c"]
+    environment:
+      POSTGRES_URL: postgres:5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY_ID: minioadmin
+      MINIO_SECRET_ACCESS_KEY: minioadmin
+      MINIO_BUCKET: profiler
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    command: ["/maintenance_job migrate && /maintenance_job run"]
+    networks:
+      - vm_net
+    restart: "no"
+
+  maintenance:
+    container_name: maintenance
+    image: profiler-maintenance:latest
+    environment:
+      POSTGRES_URL: postgres:5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY_ID: minioadmin
+      MINIO_SECRET_ACCESS_KEY: minioadmin
+      MINIO_BUCKET: profiler
+      CRON_SCHEDULE: "*/5 * * * *"
+    depends_on:
+      maintenance-init:
+        condition: service_completed_successfully
+    command: ["/maintenance_job", "run", "--run.cron"]
+    networks:
+      - vm_net
+    restart: unless-stopped
+
   cpu-service:
     container_name: cpu-service
     build:
@@ -77,6 +121,11 @@ services:
     ports:
       - "8081:8081"
     environment:
+      CLOUD_NAMESPACE: namespace
+      MICROSERVICE_NAME: cpu-service
+      REMOTE_DUMP_HOST: profiler-collector
+      REMOTE_DUMP_PORT_PLAIN: 1715
+      FORCE_LOCAL_DUMP: true
       OTEL_SERVICE_NAME: cpu-service
       OTEL_TRACES_EXPORTER: otlp
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
@@ -116,6 +165,11 @@ services:
     ports:
       - "8080:8080"
     environment:
+      CLOUD_NAMESPACE: namespace
+      MICROSERVICE_NAME: io-service
+      REMOTE_DUMP_HOST: profiler-collector
+      REMOTE_DUMP_PORT_PLAIN: 1715
+      FORCE_LOCAL_DUMP: true
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: postgres
@@ -324,6 +378,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      maintenance-init:
+        condition: service_completed_successfully
     networks:
       - vm_net
     restart: unless-stopped

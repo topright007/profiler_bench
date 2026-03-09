@@ -43,4 +43,8 @@ if [[ ! -d "$UI_RESOURCES_DIR/static/css" || ! -d "$UI_RESOURCES_DIR/static/js" 
 fi
 
 ./mvnw --batch-mode clean package -Dmaven.test.skip=true -Dmaven.javadoc.skip=true -V -B
-docker build . -t "profiler-collector:latest" 
+docker build . -t "profiler-collector:latest"
+
+# Build maintenance (migrate + cron for dynamic tables)
+cd ../../
+docker build -f apps/maintenance/Dockerfile . -t "profiler-maintenance:latest" 
