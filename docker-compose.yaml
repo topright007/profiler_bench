@@ -332,23 +332,23 @@ services:
     networks:
       - vm_net
     restart: unless-stopped
-#  profiler-ui:
-#    container_name: profiler-ui
-#    # build:
-#    #   context: profiler_build/profiler_agent/profiler/build/libs
-#    #   dockerfile: ../../../../Dockerfile.ui
-#    image: profiler-ui:topright
-#    ports:
-#      - 8180:8180
-#      - 7779:7779
-#    volumes:
-#      - dump:/var/log/dump
-#    networks:
-#      - vm_net
-#    restart: unless-stopped
-#    depends_on:
-#      init-dump:
-#        condition: service_completed_successfully
+  profiler-ui:
+    container_name: profiler-ui
+    # build:
+    #   context: profiler_build/profiler_agent/profiler/build/libs
+    #   dockerfile: ../../../../Dockerfile.ui
+    image: profiler-ui:topright
+    ports:
+      - 8180:8180
+      - 7779:7779
+    volumes:
+      - dump:/var/log/dump
+    networks:
+      - vm_net
+    restart: unless-stopped
+    depends_on:
+      init-dump:
+        condition: service_completed_successfully
   profiler-collector:
     container_name: profiler-collector
     image: profiler-collector:latest
@@ -357,7 +357,6 @@ services:
       - 1715:1715
       - 5005:5005
       - 18080:8080
-      - 8180:8180
     environment:
       QUARKUS_PROFILE: cloud
       POSTGRES_HOST: postgres
