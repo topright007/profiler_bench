@@ -30,18 +30,21 @@ public class RecommendationService {
     
     @WithSpan("getRecommendations")
     @Transactional(readOnly = true)
-    public RecommendationResponse getRecommendations(@SpanAttribute("customerId") Long customerId) {
-        logger.info("Processing recommendation request for customer {}", customerId);
+    public RecommendationResponse getRecommendations(
+            @SpanAttribute("customerId") Long customerId,
+            @SpanAttribute("fixed") Boolean fixed) {
+        logger.info("Processing recommendation request for customer {}, fixed={}", customerId, fixed);
         
         long startTime = System.currentTimeMillis();
         
         // Enrich customer data (calls level 3, which calls 4 and 5)
         RecommendationRequest request = customerEnrichmentService.enrichCustomerData(customerId);
+        request.setFixed(fixed != null && fixed);
         
         long enrichmentTime = System.currentTimeMillis() - startTime;
         logger.info("Data enrichment completed in {} ms", enrichmentTime);
         
-        // Call CPU service for calculation
+        // Call CPU service for calculation (passes fixed for optimized vs buggy CPU load)
         RecommendationResponse response = cpuServiceClient.calculateRecommendations(request);
         
         long totalTime = System.currentTimeMillis() - startTime;

@@ -83,24 +83,35 @@ public class RecommendationCalculatorService {
                 .build();
     }
     
+    /** Duration per device in ms: 30 when fixed (optimized), 100 otherwise (buggy). */
+    private static final int LOAD_MS_PER_DEVICE_FIXED = 30;
+    private static final int LOAD_MS_PER_DEVICE_DEFAULT = 100;
+    private static final int TIMER_CHECK_EVERY_DEVICES = 10;
+
     @WithSpan("RecommendationCalculatorService.performCpuIntensiveWork")
     private void performCpuIntensiveWork(RecommendationRequest request) {
         int deviceCount = request.getDevices() != null ? request.getDevices().size() : 1;
-        
-        // CPU work: Calculate fibonacci numbers
-        for (int i = 0; i < Math.min(deviceCount, 100); i++) {
-            mathUtils.fibonacci(20);
+        int durationPerDeviceMs = Boolean.TRUE.equals(request.getFixed())
+                ? LOAD_MS_PER_DEVICE_FIXED
+                : LOAD_MS_PER_DEVICE_DEFAULT;
+
+        // CPU load: busyloop for durationPerDeviceMs per device; use system timer every 10 devices
+        for (int d = 0; d < deviceCount; d += TIMER_CHECK_EVERY_DEVICES) {
+            int batchSize = Math.min(TIMER_CHECK_EVERY_DEVICES, deviceCount - d);
+            long batchDurationMs = (long) batchSize * durationPerDeviceMs;
+            processDeviceBatch(batchDurationMs);
         }
-        
-        // CPU work: Prime number checks
-        long startNumber = System.currentTimeMillis() % 10000;
-        for (int i = 0; i < deviceCount * 10; i++) {
-            mathUtils.isPrime(startNumber + i);
-        }
-        
+
         // CPU work: Hash calculations
         if (request.getCustomer() != null) {
             mathUtils.calculateHash(request.getCustomer().getName(), iterationsPerDevice);
+        }
+    }
+
+    private void processDeviceBatch(long batchDurationMs) {
+        long batchEnd = System.currentTimeMillis() + batchDurationMs;
+        while (System.currentTimeMillis() < batchEnd) {
+            mathUtils.fibonacci(15);
         }
     }
     

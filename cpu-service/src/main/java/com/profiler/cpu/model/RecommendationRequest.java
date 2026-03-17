@@ -16,4 +16,6 @@ public class RecommendationRequest {
     private List<DeviceContext> devices;
     private List<BuildingContext> buildings;
     private CustomerContext customer;
+    /** If true, use optimized 30ms load per device; otherwise 100ms (buggy behaviour). */
+    private Boolean fixed;
 }

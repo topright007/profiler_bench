@@ -24,11 +24,13 @@ public class RecommendationController {
     }
     
     @PostMapping("/recommendations/{customerId}")
-    public ResponseEntity<RecommendationResponse> getRecommendations(@PathVariable Long customerId) {
-        logger.info("Received recommendation request for customer {}", customerId);
+    public ResponseEntity<RecommendationResponse> getRecommendations(
+            @PathVariable Long customerId,
+            @RequestParam(name = "fixed", required = false, defaultValue = "false") Boolean fixed) {
+        logger.info("Received recommendation request for customer {}, fixed={}", customerId, fixed);
         
         try {
-            RecommendationResponse response = recommendationService.getRecommendations(customerId);
+            RecommendationResponse response = recommendationService.getRecommendations(customerId, fixed);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             logger.error("Error processing recommendation for customer {}: {}", customerId, e.getMessage());
