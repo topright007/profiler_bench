@@ -45,11 +45,16 @@ management:
   tracing:
     sampling:
       probability: 1.0  # Sample 100% of traces for demo purposes
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_HTTP_ENDPOINT:http://jaeger:4318/v1/traces}
 
 logging:
   level:
     com.profiler.io: INFO
     org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %5p [%15.15t] [%X{traceId:-},%X{spanId:-}] %-40.40logger{39} : %m%n"
 
 micrometer:
   observations:

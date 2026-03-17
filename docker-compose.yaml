@@ -132,7 +132,7 @@ services:
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
       OTEL_METRICS_EXPORTER: none
       OTEL_LOGS_EXPORTER: none
-      JAVA_TOOL_OPTIONS: -javaagent:/app/profiler/lib/qubership-profiler-agent.jar -Dprofiler.dump=/var/log/dump/default/cpu-service
+      JAVA_TOOL_OPTIONS: -javaagent:/app/opentelemetry-javaagent.jar -javaagent:/app/profiler/lib/qubership-profiler-agent.jar -Dprofiler.dump=/var/log/dump/default/cpu-service
     depends_on:
       init-dump:
         condition: service_completed_successfully
