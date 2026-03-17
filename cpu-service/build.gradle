@@ -1,3 +1,5 @@
 dependencies {
     // Minimal dependencies for CPU-bound service
+    // JMH Blackhole-style sink to prevent dead code elimination (optional: use real Blackhole in benchmarks)
+    implementation 'org.openjdk.jmh:jmh-core:1.37'
 }
